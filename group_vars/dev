@@ -1,1 +1,2 @@
 WORKER_CONNECTIONS: 4096 
+ZBX_PROXY: zabbix.tw.com

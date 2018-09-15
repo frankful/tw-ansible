@@ -15,7 +15,6 @@
     - include: tasks/zabbix/check_es_exist.yml
     - include: tasks/zabbix/check_mysql_exist.yml
     - include: tasks/zabbix/check_tomcat_exist.yml
-   # - include: tasks/zabbix/check_custom_para.yml
 
   handlers:
     - include: handlers.yml 

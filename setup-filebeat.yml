@@ -1,0 +1,15 @@
+---
+- hosts: "{{ NODE }}-{{ SITE }}"
+  remote_user: deploy
+  become: yes
+  tasks:
+    - include: tasks/setup-filebeat.yml
+    - include: tasks/setup-filebeat-cert.yml 
+
+    - name: copy file to remote hosts
+      copy: src={{ item.src }} dest={{ item.dest }} owner=root group=root
+      with_items:
+        - { src: templates/filebeat/xxl-jog-filebeat.yml, dest: "/etc/filebeat/filebeat.yml" }
+    - name: restart filebeat
+      service: name=filebeat state=restarted enabled=yes
+      
