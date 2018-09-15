@@ -40,7 +40,8 @@ end
 
 
 部署代码：使用目前线上改版开源项目xxl-job为例，进行自动化部署
-运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job"
+生产环境运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job"
+开发测试环境运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job version=tag"
 使用浏览器访问: http://ip:8080/toLogin
 	
 
