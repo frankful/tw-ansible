@@ -1,0 +1,11 @@
+[dev-all]
+172.17.10.50  ansible_ssh_port=7002 ansible_ssh_user=deploy ansible_ssh_pass=deploy ansible_sudo_pass=deploy 
+
+
+[dev-xxl-job]
+172.17.10.50
+
+
+
+[dev:children]
+dev-xxl-job

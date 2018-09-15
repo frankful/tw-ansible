@@ -1,0 +1,8 @@
+- name: install software-properties-common
+  apt: name=software-properties-common state=present
+- name: install repository
+  apt_repository: repo="ppa:openjdk-r/ppa"
+- name: install java
+  apt: name=openjdk-8-jdk state=latest update_cache=no cache_valid_time=86400
+- name: set java default
+  command: update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java

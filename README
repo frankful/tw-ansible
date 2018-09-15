@@ -1,0 +1,22 @@
+环境准备:
+    基础构建：
+	windows10
+        vagrant2.1.5
+        virtualbox5.2.18
+        vbox:ubuntu14
+    
+    配置中心：
+	ansible2.4
+
+项目设计：
+  	 使用vagrant + virtalbox 构建基础环境
+  	 使用ansible作为项目代码环境配置中心
+
+
+
+拉取代码配置中心代码：
+	@github.com/
+
+
+制作vbox步骤省略
+	初始化系统环境	

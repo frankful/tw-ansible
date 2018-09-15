@@ -1,0 +1,130 @@
+---
+#- hosts: "{{ NODE }}-{{ SITE }}"
+- hosts: all 
+  remote_user: deploy
+#  become_user: yes
+  sudo: true
+  tasks:
+    - include: tasks/setup-java-8.yml 
+    - include: tasks/create_tw_user.yml
+    - include: tasks/copy_tw_key.yml
+    - include: tasks/setup-mysql5.6.yml
+
+    - name: copy repo to remote hosts 
+      template: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: templates/rsakey/git.tw.id_rsa, dest: /home/deploy/ }
+
+    - name: install basic software
+      apt: name={{ item }} state=latest update_cache=no cache_valid_time=86400
+      with_items:
+        - maven
+        - git
+        - nginx
+        - python-mysqldb
+
+    - include: tasks/remove-nginx-default-site.yml
+
+
+    - name: Set config of the website
+      template: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: templates/nginx.conf, dest: /etc/nginx/ }
+        - { src: "templates/nginx/{{ SITE }}.conf", dest: "/etc/nginx/sites-enabled/{{ SITE }}.conf" }
+        - { src: "templates/config/xxl-job/xxl-job.sql", dest: "/tmp/xxl-job.sql" }
+      notify:
+        - restart nginx
+
+#    - name: init database
+#      mysql_db:
+#        login_host: "127.0.0.1"
+#        login_user: "root"
+#        login_password: ""
+#        login_port: "3306"
+#        name: "xxl-job"
+#        target: "/tmp/xxl-job.sql"
+#        state: "import"
+
+    - name: copy upstart job-executor to remote servers
+      template: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: "templates/config/xxl-job/upstart/job-executor.conf", dest: "/etc/init/job-executor.conf" }
+        - { src: "templates/config/xxl-job/upstart/site.conf", dest: "/etc/init/{{ SITE }}.conf" }
+
+    - name: ensure project path exist
+      file: path={{ PROJECT_PATH }}/{{ SITE }} state=directory mode=0757
+
+    - name: ensure tomcat path exist
+      stat: path={{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080
+      register: tomcat_path_st
+
+    - name: download tomcat
+      get_url: url="https://archive.apache.org/dist/tomcat/tomcat-8/v8.0.48/bin/apache-tomcat-8.0.48.tar.gz" dest={{ PROJECT_PATH }}/{{ SITE }}
+      when: tomcat_path_st.stat.exists == False
+
+    - name: uncompress software package
+      unarchive: src={{ PROJECT_PATH }}/{{ SITE }}/apache-tomcat-8.0.48.tar.gz dest={{ PROJECT_PATH }}/{{ SITE }} copy=no
+      when: tomcat_path_st.stat.exists == False
+
+    - name: rename tomcat path
+      command: mv {{ PROJECT_PATH }}/{{ SITE }}/apache-tomcat-8.0.48 {{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080
+      when: tomcat_path_st.stat.exists == False
+
+    - name: download project source code
+      become_user: deploy
+      git: repo={{ GIT_REPO_XXL_JOB }} dest={{ PROJECT_PATH }}/{{ SITE }}/src/ version={{ VERSION|default('master') }} key_file=~/git.tw.id_rsa accept_hostkey=yes force=yes
+
+    - name: copy settings for maven
+      template: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: templates/config/xxl-job/settings.xml, dest: /etc/maven/ }
+
+    - name: Set java home
+      shell: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/bin 
+      become: no
+
+    - name: make 
+      become_user: deploy
+      shell: mvn clean install -Dmaven.test.skip
+      args:
+        chdir: "{{ PROJECT_PATH }}/{{ SITE }}/src"
+      notify:
+        - "restart tomcat {{ SITE }}"
+
+    - name: delete webapps
+      file: path={{ item }} state=absent
+      with_items:
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/webapps/examples"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/webapps/docs"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/webapps/ROOT"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/webapps/manager"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/webapps/host-manager"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/webapps"
+
+    - name: ensure path exist
+      file: path={{ item }} state=directory
+      with_items:
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/conf/Catalina/localhost"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/webapps"
+        - "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/properties/{{ SITE }}/"
+
+    - name: copy upstart to remote servers
+      template: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: "templates/config/xxl-job/ROOT.xml", dest: "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/conf/Catalina/localhost/ROOT.xml" }
+    
+    - name: set file or directory permission
+      file: path={{ item.path }} owner={{ item.owner }} recurse={{ item.recurse }}
+      with_items:
+        - { path: "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/conf", owner: www-data, recurse: yes }
+        - { path: "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/temp", owner: www-data, recurse: no }
+        - { path: "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/work", owner: www-data, recurse: no }
+        - { path: "{{ PROJECT_PATH }}/{{ SITE }}/tomcat-8080/logs", owner: www-data, recurse: yes }
+
+    - name: uzip 
+      unarchive: src={{ PROJECT_PATH }}/{{ SITE }}/src/{{ SITE }}-admin/target/{{ SITE }}-admin.war dest={{ PROJECT_PATH }}/{{ SITE }}/webapps/ copy=no
+      notify:
+        - "start job-executor"
+
+  handlers:
+    - include: handlers.yml

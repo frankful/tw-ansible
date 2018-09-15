@@ -1,0 +1,21 @@
+---
+- hosts: "{{ NODE }}-all"
+  remote_user: deploy
+  become: yes
+  tasks:
+    - include: tasks/repo-force-ipv4.yml
+   
+    - include: tasks/zabbix/install-zabbix.yml
+
+    - name: modify configure
+      lineinfile: dest=/etc/zabbix/zabbix_agentd.conf regexp='^Server=' line="Server={{ ZBX_PROXY }}"
+      notify:
+        - restart zabbix-agent
+
+    - include: tasks/zabbix/check_es_exist.yml
+    - include: tasks/zabbix/check_mysql_exist.yml
+    - include: tasks/zabbix/check_tomcat_exist.yml
+   # - include: tasks/zabbix/check_custom_para.yml
+
+  handlers:
+    - include: handlers.yml 

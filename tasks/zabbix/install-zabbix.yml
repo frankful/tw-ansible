@@ -1,0 +1,13 @@
+- name: install software
+  copy: src=tasks/zabbix/{{ item }}  dest=/tmp/
+  with_items:
+    - zabbix-release_3.2-1+trusty_all.deb 
+
+- name: install deb
+  apt: deb=/tmp/zabbix-release_3.2-1+trusty_all.deb
+
+- name: install key
+  apt_key: file=/tmp/zabbix-official-repo.key
+
+- name: install zabbix agent
+  apt: name=zabbix-agent state=present update_cache=yes

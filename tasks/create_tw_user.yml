@@ -1,0 +1,3 @@
+---
+- name: Ensure User cuckoo
+  user: name=cuckoo group=www-data shell=/bin/bash state=present password=$6$7gQ8q8UXq/$mOiR6xdiXGXs4ioXQB.AWEAg9CL/VYOUqn6yREdvxOYAS9atsFpriC/CS9zwAawauWsk5qk8QdZC2uZ9IH8sG0

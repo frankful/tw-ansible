@@ -1,0 +1,13 @@
+---
+- name: restart nginx
+  service: name=nginx state=reloaded
+- name: restart tomcat xxl-job 
+  service: name=xxl-job state=restarted
+- name: start mysql
+  service: name=mysql state=restarted
+- name: start job-executor 
+  service: name=job-executor state=started
+- name: restart zabbix-agent
+  service: name=zabbix-agent state=restarted
+- name: restart filebeat
+  service: name=filebeat state=restarted enabled=yes

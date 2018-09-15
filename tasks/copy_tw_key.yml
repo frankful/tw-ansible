@@ -1,0 +1,3 @@
+---
+- name: Copy key to cuckoo
+  template: src=templates/rsakey/git.tw.id_rsa dest=/home/deploy/git.id_rsa owner=cuckoo mode=0600

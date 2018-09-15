@@ -1,0 +1,2 @@
+- name: force ipv4 for apt update
+  lineinfile: dest=/etc/apt/apt.conf.d/99force-ipv4 line='Acquire::ForceIPv4 "true";' create=yes state=present
