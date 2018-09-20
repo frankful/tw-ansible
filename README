@@ -15,7 +15,8 @@
 
 
 拉取代码配置中心代码: git clone git@github.com:frankful/tw-ansible.git
-
+		      替换host/dev中主机ip(172.17.10.50)为vagrantfile新建ip
+	
 制作vbox步骤省略: *
 
 初始化系统环境: less Vagrantfile 
@@ -40,9 +41,10 @@ end
 
 
 部署代码：使用目前线上改版开源项目xxl-job为例，进行自动化部署
-生产环境运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job"
-开发测试环境运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job version=tag"
-使用浏览器访问: http://ip:8080/toLogin
+	1.替换host/dev中主机ip(172.17.10.50)为vagrantfile新建ip
+	2.生产环境运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job"
+	3.开发测试环境运行：ansible-playbook -i hosts/ deploy-tw-java.yml  -e "NODE=dev SITE=xxl-job version=tag"
+	4.使用浏览器访问: http://ip:8080/toLogin
 	
 
 项目结构说明

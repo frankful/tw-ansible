@@ -35,15 +35,15 @@
       notify:
         - restart nginx
 
-#    - name: init database
-#      mysql_db:
-#        login_host: "127.0.0.1"
-#        login_user: "root"
-#        login_password: ""
-#        login_port: "3306"
-#        name: "xxl-job"
-#        target: "/tmp/xxl-job.sql"
-#        state: "import"
+    - name: init database
+      mysql_db:
+        login_host: "127.0.0.1"
+        login_user: "root"
+        login_password: ""
+        login_port: "3306"
+        name: "xxl-job"
+        target: "/tmp/xxl-job.sql"
+        state: "import"
 
     - name: copy upstart job-executor to remote servers
       template: src={{ item.src }} dest={{ item.dest }}
